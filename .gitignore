@@ -9,3 +9,5 @@ bin
 .env
 *.iml
 out
+
+messages
