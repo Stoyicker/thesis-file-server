@@ -71,6 +71,7 @@ public final class MessagesService extends HttpServlet {
                 object.put("tags", FileUtils.readFileToString(tagsFile, ConfigVars.SERVER_CHARSET));
             object.put("content_html", FileUtils.readFileToString(bodyFile));
             resp.setContentType("application/json");
+            resp.getWriter().print(object.toString());
             resp.setStatus(HttpServletResponse.SC_OK);
         } catch (JSONException e) {
             e.printStackTrace(System.err);

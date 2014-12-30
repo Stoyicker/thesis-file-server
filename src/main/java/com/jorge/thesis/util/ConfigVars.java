@@ -11,6 +11,7 @@ public final class ConfigVars {
     public static String PORT, MESSAGE_CONTAINER;
     public static String MESSAGE_TAGS_FILE_NAME;
     public static String MESSAGE_SKETCHBOARD_FILE_NAME;
+    public static String MESSAGE_TIMESTAMP_FILE_NAME;
     public static Charset SERVER_CHARSET;
     private static Boolean INITIALIZED = Boolean.FALSE;
 
@@ -33,6 +34,8 @@ public final class ConfigVars {
                         ("/charset")));
                 MESSAGE_SKETCHBOARD_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
                         ("/message_sketchboard_file_name"));
+                MESSAGE_TIMESTAMP_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
+                        ("/message_timestamp_file_name"));
                 INITIALIZED = Boolean.TRUE;
             } catch (IOException e) {
                 e.printStackTrace(System.err);

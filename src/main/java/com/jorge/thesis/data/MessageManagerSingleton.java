@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class MessageManagerSingleton {
 
@@ -85,9 +86,10 @@ public class MessageManagerSingleton {
 
         //Clean the tags
         final List<String> cleanTags = new LinkedList<>();
+        final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
         for (String t : tags) {
             final String cleanTag = t.trim().toLowerCase();
-            if (!cleanTags.contains(cleanTag))
+            if (tagFormatPattern.matcher(cleanTag).matches() && !cleanTags.contains(cleanTag))
                 cleanTags.add(cleanTag);
         }
 
@@ -98,6 +100,17 @@ public class MessageManagerSingleton {
                                 .SERVER_CHARSET,
                         Boolean.FALSE);
             }
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            //Should never happen
+            return Boolean.FALSE;
+        }
+
+        try {
+            FileUtils.writeStringToFile(Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
+                    .MESSAGE_TIMESTAMP_FILE_NAME).toAbsolutePath().toFile(), Long.toString(System.currentTimeMillis()
+            ), ConfigVars
+                    .SERVER_CHARSET, Boolean.FALSE);
         } catch (IOException e) {
             e.printStackTrace(System.err);
             //Should never happen
