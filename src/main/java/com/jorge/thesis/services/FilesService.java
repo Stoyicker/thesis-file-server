@@ -40,6 +40,8 @@ public final class FilesService extends HttpServlet {
 
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.getOutputStream().write(IOUtils.toByteArray(new FileInputStream(file)));
+
+        resp.setContentType("application/octet-stream");
     }
 
     @Override

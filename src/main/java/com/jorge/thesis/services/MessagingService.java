@@ -51,6 +51,8 @@ public final class MessagingService extends HttpServlet {
             //Should never happen
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+
+        resp.setContentType("application/json");
     }
 
 
