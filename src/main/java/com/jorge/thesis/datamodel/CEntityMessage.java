@@ -8,6 +8,10 @@ public class CEntityMessage {
         messageId = _messageId;
     }
 
+    String getMessageId() {
+        return messageId;
+    }
+
     /**
      * The purpose of this class is to take out from the programmer the responsibility of finding an id for the message.
      */

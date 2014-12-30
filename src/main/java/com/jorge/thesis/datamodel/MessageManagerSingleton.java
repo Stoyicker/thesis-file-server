@@ -56,11 +56,11 @@ public class MessageManagerSingleton {
         return mLastUsedId;
     }
 
-    public Boolean areMoreMessagesAllowed() {
+    public synchronized Boolean areMoreMessagesAllowed() {
         return new File(ConfigVars.MESSAGE_CONTAINER).list().length < Integer.MAX_VALUE;
     }
 
-    public Boolean processMessage(String content_html, List<String> tags) {
+    public synchronized Boolean processMessage(String content_html, List<String> tags) {
         //TODO processMessage
         return Boolean.FALSE;
     }
