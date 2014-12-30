@@ -15,7 +15,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 
-public final class MessagingService extends HttpServlet {
+public final class MessagesService extends HttpServlet {
 
     private static final long serialVersionUID = -9034267862516901563L;
     private static final String TAG_SEPARATOR = "+";

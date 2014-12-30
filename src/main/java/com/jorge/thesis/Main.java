@@ -1,7 +1,7 @@
 package com.jorge.thesis;
 
 import com.jorge.thesis.services.FilesService;
-import com.jorge.thesis.services.MessagingService;
+import com.jorge.thesis.services.MessagesService;
 import com.jorge.thesis.util.ConfigVars;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -46,7 +46,7 @@ public class Main {
                 ServletContextHandler.SESSIONS);
         context.setContextPath("/");
         server.setHandler(context);
-        context.addServlet(new ServletHolder(new MessagingService()),
+        context.addServlet(new ServletHolder(new MessagesService()),
                 "/messages");
         context.addServlet(new ServletHolder(new FilesService()),
                 "/files");
