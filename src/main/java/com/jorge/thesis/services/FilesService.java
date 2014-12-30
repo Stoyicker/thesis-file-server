@@ -1,6 +1,10 @@
 package com.jorge.thesis.services;
 
 import com.jorge.thesis.util.ConfigVars;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
 
 import javax.servlet.ServletException;
@@ -13,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 public final class FilesService extends HttpServlet {
 
@@ -57,12 +62,41 @@ public final class FilesService extends HttpServlet {
         resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
 
         if (Files.exists(messagePath)) {
-            if (!Files.exists(Paths.get(messagePath.toAbsolutePath().toString(), fileName))) {
-                //TODO Upload file
-                resp.setStatus(HttpServletResponse.SC_OK);
+            final Path filePath;
+            if (!Files.exists(filePath = Paths.get(messagePath.toAbsolutePath().toString(), fileName))) {
+                if (uploadFile(filePath, req))
+                    resp.setStatus(HttpServletResponse.SC_OK);
+                else
+                    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             } else
                 resp.setStatus(HttpServletResponse.SC_CONFLICT);
         } else
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+    }
+
+    private Boolean uploadFile(Path filePath, HttpServletRequest req) {
+        FileItemFactory factory = new DiskFileItemFactory();
+
+        ServletFileUpload upload = new ServletFileUpload(factory);
+
+        try {
+            List items = upload.parseRequest(req);
+
+            // Iterate through the incoming request data
+            for (Object item1 : items) {
+                // Get the current item in the iteration
+                FileItem item = (FileItem) item1;
+                if (!item.isFormField()) {
+                    File disk = new File(filePath.toAbsolutePath().toString());
+                    item.write(disk);
+                }
+            }
+
+            return Boolean.TRUE;
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            //Should never happen
+            return Boolean.FALSE;
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.jorge.thesis;
 
+import com.jorge.thesis.services.FilesService;
 import com.jorge.thesis.services.MessagingService;
 import com.jorge.thesis.util.ConfigVars;
 import org.eclipse.jetty.server.Server;
@@ -47,6 +48,8 @@ public class Main {
         server.setHandler(context);
         context.addServlet(new ServletHolder(new MessagingService()),
                 "/messages");
+        context.addServlet(new ServletHolder(new FilesService()),
+                "/files");
 
         System.out.print("Requesting server start...");
         server.start();

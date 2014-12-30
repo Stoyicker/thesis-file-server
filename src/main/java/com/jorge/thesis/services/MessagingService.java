@@ -24,7 +24,7 @@ public final class MessagingService extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        final String messageId = req.getParameter("messageid"), fileName = "index.html";
+        final String messageId = req.getParameter("messageid"), fileName = ConfigVars.MESSAGE_BODY_FILE_NAME;
 
         if (messageId == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -44,6 +44,7 @@ public final class MessagingService extends HttpServlet {
         final JSONObject object = new JSONObject();
         try {
             object.put("status", "ok");
+            //TODO Puts its tags in a tags attribute separated by TAG_SEPARATOR - object.put("tags",);
             object.put("content_html", IOUtils.toString(new FileInputStream(file)));
             resp.setStatus(HttpServletResponse.SC_OK);
         } catch (JSONException e) {

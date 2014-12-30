@@ -6,6 +6,7 @@ import java.io.IOException;
 
 public final class ConfigVars {
 
+    public static String MESSAGE_BODY_FILE_NAME;
     public static String PORT, MESSAGE_CONTAINER;
     private static Boolean INITIALIZED = Boolean.FALSE;
 
@@ -20,6 +21,8 @@ public final class ConfigVars {
             try {
                 MESSAGE_CONTAINER = IOUtils.toString(ConfigVars.class.getResourceAsStream
                         ("/message_folder_name"));
+                MESSAGE_BODY_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
+                        ("/message_body_file_name"));
                 INITIALIZED = Boolean.TRUE;
             } catch (IOException e) {
                 e.printStackTrace(System.err);

@@ -9,5 +9,5 @@ bin
 .env
 *.iml
 out
-
-messages
+testFile.exe
+msg
