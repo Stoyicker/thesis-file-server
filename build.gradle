@@ -9,16 +9,14 @@ repositories {
 dependencies {
     compile 'org.eclipse.jetty:jetty-servlet:7.5.3.v20111011'
     compile 'javax.ws.rs:jsr311-api:0.11'
-    compile 'org.apache.commons:commons-csv:1.0'
     compile 'commons-io:commons-io:2.4'
     compile 'com.squareup.okhttp:okhttp:2.1.0'
-    compile 'org.json:json:20090211'
     compile 'org.apache.derby:derbyclient:10.4.2.0'
 }
 
 task fatJar(type: Jar) {
     manifest {
-        attributes 'Implementation-Title': 'GCM_COMM_EXP_SYS',
+        attributes 'Implementation-Title': 'FILE_SERV_COMM_EXP_SYS',
                 'Implementation-Version': version,
                 'Main-Class': 'com.jorge.thesis.Main'
     }
