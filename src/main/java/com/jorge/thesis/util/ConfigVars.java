@@ -6,9 +6,11 @@ import java.io.IOException;
 
 public final class ConfigVars {
 
+    private static Boolean INITIALIZED = Boolean.FALSE;
+
     public static String MESSAGE_BODY_FILE_NAME;
     public static String PORT, MESSAGE_CONTAINER;
-    private static Boolean INITIALIZED = Boolean.FALSE;
+    public static String MESSAGE_TAGS_FILE_NAME;
 
     private ConfigVars() throws IllegalAccessException {
         throw new IllegalAccessException("DO NOT CONSTRUCT " + ConfigVars.class.getName());
@@ -23,6 +25,8 @@ public final class ConfigVars {
                         ("/message_folder_name"));
                 MESSAGE_BODY_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
                         ("/message_body_file_name"));
+                MESSAGE_TAGS_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
+                        ("/message_tags_file_name"));
                 INITIALIZED = Boolean.TRUE;
             } catch (IOException e) {
                 e.printStackTrace(System.err);

@@ -21,8 +21,6 @@ import java.util.List;
 
 public final class FilesService extends HttpServlet {
 
-    private static final long serialVersionUID = -9034267862516901563L;
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -74,7 +72,7 @@ public final class FilesService extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
     }
 
-    private Boolean uploadFile(Path filePath, HttpServletRequest req) {
+    private synchronized Boolean uploadFile(Path filePath, HttpServletRequest req) {
         FileItemFactory factory = new DiskFileItemFactory();
 
         ServletFileUpload upload = new ServletFileUpload(factory);

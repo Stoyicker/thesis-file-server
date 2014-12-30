@@ -5,6 +5,7 @@ import com.jorge.thesis.util.ConfigVars;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class MessageManagerSingleton {
 
@@ -57,5 +58,10 @@ public class MessageManagerSingleton {
 
     public Boolean areMoreMessagesAllowed() {
         return new File(ConfigVars.MESSAGE_CONTAINER).list().length < Integer.MAX_VALUE;
+    }
+
+    public Boolean processMessage(String content_html, List<String> tags) {
+        //TODO processMessage
+        return Boolean.FALSE;
     }
 }
