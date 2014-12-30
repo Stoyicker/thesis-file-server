@@ -40,6 +40,10 @@ public class MessageManagerSingleton {
                 try {
                     Integer t = Integer.valueOf(mLastUsedId) + 1;
                     mLastUsedId = t.toString();
+                    if (t == Integer.MAX_VALUE) {
+                        System.out.println("IT IS CRITICALLY IMPORTANT THAT YOU SCHEDULE A PURGE AND RESTART THE " +
+                                "SERVER.");
+                    }
                 } catch (NumberFormatException e) {
                     e.printStackTrace(System.err);
                     //Should never happen
@@ -49,5 +53,9 @@ public class MessageManagerSingleton {
             }
 
         return mLastUsedId;
+    }
+
+    public Boolean areMoreMessagesAllowed() {
+        return new File(ConfigVars.MESSAGE_CONTAINER).list().length < Integer.MAX_VALUE;
     }
 }

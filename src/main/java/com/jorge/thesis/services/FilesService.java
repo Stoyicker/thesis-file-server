@@ -1,10 +1,7 @@
 package com.jorge.thesis.services;
 
-import com.jorge.thesis.datamodel.MessageManagerSingleton;
 import com.jorge.thesis.util.ConfigVars;
 import org.apache.commons.io.IOUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -13,20 +10,21 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public final class MessagingService extends HttpServlet {
+public final class FilesService extends HttpServlet {
 
     private static final long serialVersionUID = -9034267862516901563L;
-    private static final String TAG_SEPARATOR = "+";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        final String messageId = req.getParameter("messageid"), fileName = "index.html";
+        final String messageId = req.getParameter("messageid"), fileName = req.getParameter("filename");
 
-        if (messageId == null) {
+        if (messageId == null || fileName == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
@@ -40,26 +38,29 @@ public final class MessagingService extends HttpServlet {
             return;
         }
 
-
-        final JSONObject object = new JSONObject();
-        try {
-            object.put("status", "ok");
-            object.put("content_html", IOUtils.toString(new FileInputStream(file)));
-            resp.setStatus(HttpServletResponse.SC_OK);
-        } catch (JSONException e) {
-            e.printStackTrace(System.err);
-            //Should never happen
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.getOutputStream().write(IOUtils.toByteArray(new FileInputStream(file)));
     }
-
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if (MessageManagerSingleton.getInstance().areMoreMessagesAllowed()) {
-            //TODO Upload message as JSON, store the html
-            resp.setStatus(HttpServletResponse.SC_OK);
+        final String messageId = req.getParameter("messageid"), fileName = req.getParameter("filename");
+
+        final Path messagePath = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId);
+
+        if (messageId == null || fileName == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
+
+        if (Files.exists(messagePath)) {
+            if (!Files.exists(Paths.get(messagePath.toAbsolutePath().toString(), fileName))) {
+                //TODO Upload file
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } else
+                resp.setStatus(HttpServletResponse.SC_CONFLICT);
         } else
-            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
     }
 }
