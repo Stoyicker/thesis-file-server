@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,13 +25,31 @@ public final class MessagesService extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        final String messageId = req.getParameter("messageid"), fileName = ConfigVars.MESSAGE_BODY_FILE_NAME,
+        final String messageId = req.getParameter("messageid"), bodyType = req.getParameter("type"), fileName,
                 tagsFileName = ConfigVars.MESSAGE_TAGS_FILE_NAME;
 
-        if (messageId == null) {
+        if (messageId == null || bodyType == null) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
+
+        switch (bodyType.toLowerCase()) {
+            case "normal":
+                fileName = ConfigVars.MESSAGE_BODY_FILE_NAME;
+                break;
+            case "sketchboard":
+                fileName = ConfigVars.MESSAGE_SKETCHBOARD_FILE_NAME;
+                if (Files.exists(Paths.get(fileName))) {
+                    resp.addHeader("Message-Identifier", "string; identifier=" + messageId);
+                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    return;
+                }
+                break;
+            default:
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+        }
+
         resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
 
         final File bodyFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, fileName).toFile(), tagsFile = Paths
