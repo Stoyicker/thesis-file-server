@@ -69,7 +69,8 @@ public final class MessagesService extends HttpServlet {
             return;
         }
 
-        final JSONObject object = (JSONObject) JSON.parse(req.getReader());
+        final JSONObject object = (JSONObject) JSON.parse(req.getReader()); //Data from the body as characters (fine
+        // for JSON)
         final String content_html;
         final List<String> tags = new LinkedList<>();
         try {
