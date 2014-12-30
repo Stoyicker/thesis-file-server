@@ -1,8 +1,8 @@
 package com.jorge.thesis.services;
 
-import com.jorge.thesis.datamodel.MessageManagerSingleton;
+import com.jorge.thesis.data.MessageManagerSingleton;
 import com.jorge.thesis.util.ConfigVars;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jetty.util.ajax.JSON;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,7 +13,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.LinkedList;
@@ -50,8 +49,8 @@ public final class MessagesService extends HttpServlet {
             if (!tagsFile.exists())
                 object.put("tags", "");
             else
-                object.put("tags", IOUtils.toString(new FileInputStream(tagsFile)));
-            object.put("content_html", IOUtils.toString(new FileInputStream(bodyFile)));
+                object.put("tags", FileUtils.readFileToString(tagsFile, ConfigVars.SERVER_CHARSET));
+            object.put("content_html", FileUtils.readFileToString(bodyFile));
             resp.setContentType("application/json");
             resp.setStatus(HttpServletResponse.SC_OK);
         } catch (JSONException e) {

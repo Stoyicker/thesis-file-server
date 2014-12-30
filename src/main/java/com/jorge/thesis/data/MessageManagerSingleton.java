@@ -1,10 +1,13 @@
-package com.jorge.thesis.datamodel;
+package com.jorge.thesis.data;
 
 import com.jorge.thesis.util.ConfigVars;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MessageManagerSingleton {
@@ -27,7 +30,7 @@ public class MessageManagerSingleton {
         return ret;
     }
 
-    public synchronized String generateMessageId() {
+    private synchronized String generateMessageId() {
         if (mLastUsedId == null) {
             Integer possibleId = new File(ConfigVars.MESSAGE_CONTAINER).list().length;
 
@@ -61,7 +64,46 @@ public class MessageManagerSingleton {
     }
 
     public synchronized Boolean processMessage(String content_html, List<String> tags) {
-        //TODO processMessage
-        return Boolean.FALSE;
+        final String messageId = generateMessageId();
+
+        if (!Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId).toFile().mkdirs()) {
+            System.err.println("Error when processing message " + messageId + " (folder creation). Aborting message " +
+                    "processing.");
+            //Should never happen
+            return Boolean.FALSE;
+        }
+
+        try {
+            FileUtils.writeStringToFile(Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
+                            .MESSAGE_BODY_FILE_NAME).toAbsolutePath().toFile(), content_html, ConfigVars.SERVER_CHARSET,
+                    Boolean.FALSE);
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            //Should never happen
+            return Boolean.FALSE;
+        }
+
+        //Clean the tags
+        final List<String> cleanTags = new LinkedList<>();
+        for (String t : tags) {
+            final String cleanTag = t.trim().toLowerCase();
+            if (!cleanTags.contains(cleanTag))
+                cleanTags.add(cleanTag);
+        }
+
+        try {
+            for (String ct : cleanTags) {
+                FileUtils.writeStringToFile(Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
+                                .MESSAGE_TAGS_FILE_NAME).toAbsolutePath().toFile(), ct + "\n", ConfigVars
+                                .SERVER_CHARSET,
+                        Boolean.FALSE);
+            }
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            //Should never happen
+            return Boolean.FALSE;
+        }
+
+        return Boolean.TRUE;
     }
 }

@@ -5,14 +5,13 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +41,7 @@ public final class FilesService extends HttpServlet {
         }
 
         resp.setStatus(HttpServletResponse.SC_OK);
-        resp.getOutputStream().write(IOUtils.toByteArray(new FileInputStream(file)));
+        resp.getOutputStream().write(FileUtils.readFileToByteArray(file));
 
         resp.setContentType("application/octet-stream");
     }
