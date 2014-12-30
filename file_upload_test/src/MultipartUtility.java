@@ -2,8 +2,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This utility class provides an abstraction layer for sending multipart HTTP
@@ -112,35 +110,11 @@ public class MultipartUtility {
         writer.flush();
     }
 
-    /**
-     * Completes the request and receives response from the server.
-     *
-     * @return a list of Strings as response in case the server returned
-     * status OK, otherwise an exception is thrown.
-     * @throws IOException
-     */
-    public List<String> finish() throws IOException {
-        List<String> response = new ArrayList<String>();
-
+    public Integer finish() throws IOException {
         writer.append(LINE_FEED).flush();
-        writer.append("--" + boundary + "--").append(LINE_FEED);
+        writer.append("--").append(boundary).append("--").append(LINE_FEED);
         writer.close();
 
-        // checks server's status code first
-        int status = httpConn.getResponseCode();
-        if (status == HttpURLConnection.HTTP_OK) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    httpConn.getInputStream()));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                response.add(line);
-            }
-            reader.close();
-            httpConn.disconnect();
-        } else {
-            throw new IOException("Server returned non-OK status: " + status);
-        }
-
-        return response;
+        return httpConn.getResponseCode();
     }
 }
