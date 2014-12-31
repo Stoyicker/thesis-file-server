@@ -70,6 +70,15 @@ public final class MessagesService extends HttpServlet {
                 return;
             }
 
+            final String[] allFilesInFolder = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId).toFile().list();
+            List<String> allAttachments = new LinkedList<>();
+            for (String x : allFilesInFolder) {
+                if (!x.contentEquals(ConfigVars.MESSAGE_TIMESTAMP_FILE_NAME) && !x.contentEquals(ConfigVars
+                        .MESSAGE_BODY_FILE_NAME) && !x.contentEquals(ConfigVars.MESSAGE_SKETCHBOARD_FILE_NAME) && !x
+                        .contentEquals(ConfigVars.MESSAGE_TAGS_FILE_NAME))
+                    allAttachments.add(x);
+            }
+
             final JSONObject object = new JSONObject();
 
             try {
@@ -79,6 +88,10 @@ public final class MessagesService extends HttpServlet {
                 else
                     object.put("tags", FileUtils.readFileToString(tagsFile, ConfigVars.SERVER_CHARSET));
                 object.put("content_html", FileUtils.readFileToString(bodyFile));
+                JSONArray attachmentNames = new JSONArray();
+                allAttachments.forEach(attachmentNames::put);
+                object.put("has_attachments", attachmentNames.length() > 0);
+                object.put("attachments", attachmentNames);
                 resp.setContentType("application/json");
                 resp.getWriter().print(object.toString());
                 resp.setStatus(HttpServletResponse.SC_OK);
