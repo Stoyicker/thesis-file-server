@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 
 public final class TagService extends HttpServlet {
 
-    static final String TAG_SEPARATOR = "+";
+    static final String TAG_SEPARATOR = "-";
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

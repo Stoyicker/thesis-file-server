@@ -3,7 +3,9 @@ package com.jorge.thesis.services;
 import com.jorge.thesis.data.MessageManagerSingleton;
 import com.jorge.thesis.io.net.HTTPRequestsSingleton;
 import com.jorge.thesis.util.ConfigVars;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -137,7 +139,7 @@ public final class MessagesService extends HttpServlet {
                     final String requestURL = ConfigVars.GCM_SERVER_ADDR.trim() + "/tags" + "?type=sync&tags=" +
                             cleanTagsTogether;
                     final Response gcmResp = HTTPRequestsSingleton.getInstance().performRequest(new Request.Builder()
-                            .url(requestURL).post(null)
+                            .url(requestURL).post(RequestBody.create(MediaType.parse("text/plain"), ""))
                             .build());
                     System.out.println(gcmResp.toString());
                 } else
