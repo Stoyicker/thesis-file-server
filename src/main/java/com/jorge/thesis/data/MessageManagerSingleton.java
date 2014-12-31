@@ -97,7 +97,7 @@ public class MessageManagerSingleton {
         try {
             for (String ct : cleanTags) {
                 FileUtils.writeStringToFile(Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
-                                .MESSAGE_TAGS_FILE_NAME).toAbsolutePath().toFile(), ct + "\n", ConfigVars
+                                .MESSAGE_TAGS_FILE_NAME).toAbsolutePath().toFile(), "\n" + ct, ConfigVars
                                 .SERVER_CHARSET,
                         Boolean.TRUE);
             }

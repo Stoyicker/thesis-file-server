@@ -19,12 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public final class MessagesService extends HttpServlet {
@@ -33,42 +29,21 @@ public final class MessagesService extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         synchronized (this) {
-            final String messageId = req.getParameter("messageid"), bodyType = req.getParameter("type"), fileName,
+            final String messageId = req.getParameter("messageid"),
                     tagsFileName = ConfigVars.MESSAGE_TAGS_FILE_NAME;
 
-            if (messageId == null || bodyType == null) {
+            if (messageId == null) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
 
-            switch (bodyType.toLowerCase(Locale.ENGLISH)) {
-                case "normal":
-                    fileName = ConfigVars.MESSAGE_BODY_FILE_NAME;
-                    break;
-                case "sketchboard":
-                    fileName = ConfigVars.MESSAGE_SKETCHBOARD_FILE_NAME;
-                    if (Files.exists(Paths.get(fileName))) {
-                        resp.addHeader("Message-Identifier", "string; identifier=" + messageId);
-                        resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                        return;
-                    }
-                    break;
-                default:
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    return;
-            }
-
-            resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
-
-            final File bodyFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, fileName).toFile(), tagsFile =
-                    Paths
-                            .get(ConfigVars.MESSAGE_CONTAINER, messageId, tagsFileName).toFile();
-
-            if (!bodyFile.exists()) {
-                resp.addHeader("Message-Identifier", "string; identifier=" + messageId);
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
+            final File normalFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
+                    .MESSAGE_BODY_FILE_NAME).toFile(),
+                    sketchBoardFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
+                            .MESSAGE_SKETCHBOARD_FILE_NAME).toFile(),
+                    tagsFile =
+                            Paths
+                                    .get(ConfigVars.MESSAGE_CONTAINER, messageId, tagsFileName).toFile();
 
             final String[] allFilesInFolder = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId).toFile().list();
             List<String> allAttachments = new LinkedList<>();
@@ -84,10 +59,29 @@ public final class MessagesService extends HttpServlet {
             try {
                 object.put("status", "ok");
                 if (!tagsFile.exists())
-                    object.put("tags", "");
-                else
-                    object.put("tags", FileUtils.readFileToString(tagsFile, ConfigVars.SERVER_CHARSET));
-                object.put("content_html", FileUtils.readFileToString(bodyFile));
+                    object.put("tags", Collections.<String>emptyList());
+                else {
+                    final List<String> nonEmptyTags = new LinkedList<>();
+                    final List<String> rawTags = FileUtils.readLines(tagsFile, ConfigVars.SERVER_CHARSET);
+                    for (String x : rawTags) {
+                        final String cleanX = x.toLowerCase(Locale.ENGLISH).trim();
+                        if (!cleanX.isEmpty() && !cleanX.contentEquals("\n") && !nonEmptyTags.contains(cleanX)) {
+                            nonEmptyTags.add(cleanX);
+                        }
+                    }
+                    object.put("tags", nonEmptyTags);
+                }
+                Boolean exists;
+                exists = normalFile.exists();
+                object.put("has_Normal", exists);
+                if (exists) {
+                    object.put("content_html", FileUtils.readFileToString(normalFile));
+                }
+                exists = sketchBoardFile.exists();
+                object.put("has_SketchBoard", exists);
+                if (exists) {
+                    object.put("sketchboard_content_html", FileUtils.readFileToString(sketchBoardFile));
+                }
                 JSONArray attachmentNames = new JSONArray();
                 allAttachments.forEach(attachmentNames::put);
                 object.put("has_attachments", attachmentNames.length() > 0);
