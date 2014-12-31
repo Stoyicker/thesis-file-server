@@ -40,7 +40,7 @@ public final class ConfigVars {
                         ("/message_sketchboard_file_name"));
                 MESSAGE_TIMESTAMP_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
                         ("/message_timestamp_file_name"));
-                String CONFIGURATION_FOLDER_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
+                final String CONFIGURATION_FOLDER_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
                         ("/configuration_folder_name"));
                 GCM_SERVER_ADDR = FileUtils.readFileToString(Paths.get(CONFIGURATION_FOLDER_NAME, "addr" +
                         ".conf").toFile());
