@@ -15,8 +15,8 @@ public final class ConfigVars {
     public static String MESSAGE_SKETCHBOARD_FILE_NAME;
     public static String MESSAGE_TIMESTAMP_FILE_NAME;
     public static String GCM_SERVER_ADDR;
+    public static String PURGE_CONF;
     public static Charset SERVER_CHARSET;
-    private static String CONFIGURATION_FOLDER_NAME;
     private static Boolean INITIALIZED = Boolean.FALSE;
 
     private ConfigVars() throws IllegalAccessException {
@@ -40,10 +40,12 @@ public final class ConfigVars {
                         ("/message_sketchboard_file_name"));
                 MESSAGE_TIMESTAMP_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
                         ("/message_timestamp_file_name"));
-                CONFIGURATION_FOLDER_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
+                String CONFIGURATION_FOLDER_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
                         ("/configuration_folder_name"));
                 GCM_SERVER_ADDR = FileUtils.readFileToString(Paths.get(CONFIGURATION_FOLDER_NAME, "addr" +
                         ".conf").toFile());
+                PURGE_CONF = FileUtils.readFileToString(Paths.get(CONFIGURATION_FOLDER_NAME, "purge" +
+                        ".xml").toFile());
                 if (GCM_SERVER_ADDR == null)
                     throw new IllegalStateException("GCM_SERVER_ADDR not provided.");
                 INITIALIZED = Boolean.TRUE;

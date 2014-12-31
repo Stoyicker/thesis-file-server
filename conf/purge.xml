@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<purge>
+  <run>true</run>
+  <deleteIfOlderThan>2</deleteIfOlderThan>
+  <keepTags>
+    <tag>tag1</tag>
+    <tag>tag2</tag>
+  </keepTags>
+</purge>
