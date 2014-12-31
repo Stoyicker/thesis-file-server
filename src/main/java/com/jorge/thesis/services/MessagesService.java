@@ -4,6 +4,7 @@ import com.jorge.thesis.data.MessageManagerSingleton;
 import com.jorge.thesis.io.net.HTTPRequestsSingleton;
 import com.jorge.thesis.util.ConfigVars;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
@@ -21,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public final class MessagesService extends HttpServlet {
@@ -37,7 +39,7 @@ public final class MessagesService extends HttpServlet {
                 return;
             }
 
-            switch (bodyType.toLowerCase()) {
+            switch (bodyType.toLowerCase(Locale.ENGLISH)) {
                 case "normal":
                     fileName = ConfigVars.MESSAGE_BODY_FILE_NAME;
                     break;
@@ -92,8 +94,8 @@ public final class MessagesService extends HttpServlet {
         synchronized (this) {
             final String objContentType = req.getContentType();
 
-            if (objContentType == null || !(objContentType.toLowerCase().trim().contentEquals
-                    ("application/json") || !objContentType.toLowerCase().trim().contentEquals
+            if (objContentType == null || !(objContentType.toLowerCase(Locale.ENGLISH).trim().contentEquals
+                    ("application/json") || !objContentType.toLowerCase(Locale.ENGLISH).trim().contentEquals
                     ("application/json; charset=UTF-8"))) {
                 System.err.println("Unexpected content-type header " + objContentType);
                 resp.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
@@ -112,7 +114,7 @@ public final class MessagesService extends HttpServlet {
                 content_html = object.getString("content_html");
                 JSONArray tagsAsJSONArray = object.getJSONArray("tags");
                 for (Integer i = 0; i < tagsAsJSONArray.length(); i++) {
-                    final String candidateTag = tagsAsJSONArray.getString(i).trim().toLowerCase();
+                    final String candidateTag = tagsAsJSONArray.getString(i).trim().toLowerCase(Locale.ENGLISH);
                     if (tagFormatPattern.matcher(candidateTag).matches() && !cleanTags.contains(candidateTag))
                         cleanTags.add(candidateTag);
                 }
@@ -134,8 +136,10 @@ public final class MessagesService extends HttpServlet {
                     }
                     final String requestURL = ConfigVars.GCM_SERVER_ADDR.trim() + "/tags" + "?type=sync&tags=" +
                             cleanTagsTogether;
-                    HTTPRequestsSingleton.getInstance().performRequest(new Request.Builder().url(requestURL).post(null)
+                    final Response gcmResp = HTTPRequestsSingleton.getInstance().performRequest(new Request.Builder()
+                            .url(requestURL).post(null)
                             .build());
+                    System.out.println(gcmResp.toString());
                 } else
                     resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             } else

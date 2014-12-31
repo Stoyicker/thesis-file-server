@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
@@ -37,7 +38,7 @@ public final class TagService extends HttpServlet {
             final StringTokenizer tagsTokenizer = new StringTokenizer(allTags, TAG_SEPARATOR);
             final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
             while (tagsTokenizer.hasMoreTokens()) {
-                String cleanTag = tagsTokenizer.nextToken().trim().toLowerCase();
+                String cleanTag = tagsTokenizer.nextToken().trim().toLowerCase(Locale.ENGLISH);
                 if (tagFormatPattern.matcher(cleanTag).matches() && !cleanTags.contains(cleanTag))
                     cleanTags.add(cleanTag);
             }

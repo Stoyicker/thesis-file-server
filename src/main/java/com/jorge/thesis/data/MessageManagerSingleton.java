@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class MessageManagerSingleton {
@@ -88,7 +89,7 @@ public class MessageManagerSingleton {
         final List<String> cleanTags = new LinkedList<>();
         final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
         for (String t : tags) {
-            final String cleanTag = t.trim().toLowerCase();
+            final String cleanTag = t.trim().toLowerCase(Locale.ENGLISH);
             if (tagFormatPattern.matcher(cleanTag).matches() && !cleanTags.contains(cleanTag))
                 cleanTags.add(cleanTag);
         }
