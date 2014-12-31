@@ -2,6 +2,7 @@ package com.jorge.thesis;
 
 import com.jorge.thesis.services.FilesService;
 import com.jorge.thesis.services.MessagesService;
+import com.jorge.thesis.services.TagService;
 import com.jorge.thesis.util.ConfigVars;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -50,6 +51,8 @@ public class Main {
                 "/messages");
         context.addServlet(new ServletHolder(new FilesService()),
                 "/files");
+        context.addServlet(new ServletHolder(new TagService()),
+                "/tags");
 
         System.out.print("Requesting server start...");
         server.start();

@@ -1,9 +1,11 @@
 package com.jorge.thesis.services;
 
 import com.jorge.thesis.data.MessageManagerSingleton;
+import com.jorge.thesis.io.net.HTTPRequestsSingleton;
 import com.jorge.thesis.util.ConfigVars;
+import com.squareup.okhttp.Request;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jetty.util.ajax.JSON;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -87,18 +90,25 @@ public final class MessagesService extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         synchronized (this) {
-            if (resp.getContentType() == null || !resp.getContentType().toLowerCase().contentEquals
-                    ("application/json")) {
+            final String objContentType = req.getContentType();
+
+            if (objContentType == null || !(objContentType.toLowerCase().trim().contentEquals
+                    ("application/json") || !objContentType.toLowerCase().trim().contentEquals
+                    ("application/json; charset=UTF-8"))) {
+                System.err.println("Unexpected content-type header " + objContentType);
                 resp.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
                 return;
             }
 
-            final JSONObject object = (JSONObject) JSON.parse(req.getReader()); //Data from the body as characters (fine
-            // for JSON)
             final String content_html;
             final List<String> cleanTags = new LinkedList<>();
             final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
+
             try {
+                final JSONObject object = new JSONObject(IOUtils.toString(req.getReader())); //Data from the body as
+                // characters
+                // (fine
+                // for JSON)
                 content_html = object.getString("content_html");
                 JSONArray tagsAsJSONArray = object.getJSONArray("tags");
                 for (Integer i = 0; i < tagsAsJSONArray.length(); i++) {
@@ -116,7 +126,16 @@ public final class MessagesService extends HttpServlet {
             if (MessageManagerSingleton.getInstance().areMoreMessagesAllowed()) {
                 if (MessageManagerSingleton.getInstance().processMessage(content_html, cleanTags)) {
                     resp.setStatus(HttpServletResponse.SC_OK);
-                    //TODO Notify the GCM server so that it asks for the proper tags to be refreshed
+                    final StringBuilder cleanTagsTogether = new StringBuilder();
+                    for (Iterator<String> it = cleanTags.iterator(); it.hasNext(); ) {
+                        cleanTagsTogether.append(it.next());
+                        if (it.hasNext())
+                            cleanTagsTogether.append(TagService.TAG_SEPARATOR);
+                    }
+                    final String requestURL = ConfigVars.GCM_SERVER_ADDR.trim() + "/tags" + "?type=sync&tags=" +
+                            cleanTagsTogether;
+                    HTTPRequestsSingleton.getInstance().performRequest(new Request.Builder().url(requestURL).post(null)
+                            .build());
                 } else
                     resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             } else

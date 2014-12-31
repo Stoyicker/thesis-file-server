@@ -1,9 +1,11 @@
 package com.jorge.thesis.util;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 
 public final class ConfigVars {
 
@@ -12,7 +14,9 @@ public final class ConfigVars {
     public static String MESSAGE_TAGS_FILE_NAME;
     public static String MESSAGE_SKETCHBOARD_FILE_NAME;
     public static String MESSAGE_TIMESTAMP_FILE_NAME;
+    public static String GCM_SERVER_ADDR;
     public static Charset SERVER_CHARSET;
+    private static String CONFIGURATION_FOLDER_NAME;
     private static Boolean INITIALIZED = Boolean.FALSE;
 
     private ConfigVars() throws IllegalAccessException {
@@ -36,6 +40,12 @@ public final class ConfigVars {
                         ("/message_sketchboard_file_name"));
                 MESSAGE_TIMESTAMP_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
                         ("/message_timestamp_file_name"));
+                CONFIGURATION_FOLDER_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
+                        ("/configuration_folder_name"));
+                GCM_SERVER_ADDR = FileUtils.readFileToString(Paths.get(CONFIGURATION_FOLDER_NAME, "addr" +
+                        ".conf").toFile());
+                if (GCM_SERVER_ADDR == null)
+                    throw new IllegalStateException("GCM_SERVER_ADDR not provided.");
                 INITIALIZED = Boolean.TRUE;
             } catch (IOException e) {
                 e.printStackTrace(System.err);
