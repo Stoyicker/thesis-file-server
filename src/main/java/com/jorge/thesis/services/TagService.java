@@ -74,6 +74,7 @@ public final class TagService extends HttpServlet {
                 for (String messageId : messageIdsThatMatch) {
                     final JSONObject thisMsg = new JSONObject();
                     thisMsg.put("msgId", messageId);
+                    array.put(thisMsg);
                 }
                 object.put("messages", array);
                 resp.getWriter().print(object.toString());
@@ -89,10 +90,12 @@ public final class TagService extends HttpServlet {
 
     private synchronized Boolean fileContainsOneOrMoreTags(File tagsFile, List<String> cleanTags) throws IOException {
         List<String> lines = FileUtils.readLines(tagsFile, ConfigVars.SERVER_CHARSET);
-        for (String line : lines)
+        for (String line : lines) {
+            System.out.println("Line: " + line);
             if (cleanTags.contains(line)) {
                 return Boolean.TRUE;
             }
+        }
         return Boolean.FALSE;
     }
 }
