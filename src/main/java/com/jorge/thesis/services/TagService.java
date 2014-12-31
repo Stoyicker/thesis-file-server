@@ -24,6 +24,9 @@ public final class TagService extends HttpServlet {
     static final String TAG_SEPARATOR = "-";
 
     @Override
+    /**
+     * Gets all message ids that match at least one among the given tags that happened after a given epoch
+     */
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         synchronized (this) {
