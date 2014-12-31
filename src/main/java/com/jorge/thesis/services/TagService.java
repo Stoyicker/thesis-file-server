@@ -25,64 +25,65 @@ public final class TagService extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        synchronized (this) {
+            final String epoch = req.getParameter("epoch"), allTags = req.getParameter("tags");
 
-        final String epoch = req.getParameter("epoch"), allTags = req.getParameter("tags");
-
-        if (epoch == null || allTags == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
-        final List<String> cleanTags = new LinkedList<>();
-        final StringTokenizer tagsTokenizer = new StringTokenizer(allTags, TAG_SEPARATOR);
-        final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
-        while (tagsTokenizer.hasMoreTokens()) {
-            String cleanTag = tagsTokenizer.nextToken().trim().toLowerCase();
-            if (tagFormatPattern.matcher(cleanTag).matches() && !cleanTags.contains(cleanTag))
-                cleanTags.add(cleanTag);
-        }
-
-        String[] allMessages = Paths.get(ConfigVars.MESSAGE_CONTAINER).toFile().list();
-
-        final List<String> messageIdsThatMatch = new LinkedList<>();
-        final Long requestedEpochLimit = Long.parseLong(epoch);
-        for (String messageId : allMessages) {
-            if (!Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId).toFile().isDirectory()) {
-                //This should never happen but, just in case, don't touch
-                continue;
+            if (epoch == null || allTags == null) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
             }
 
-            final File tagsFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
-                    .MESSAGE_TAGS_FILE_NAME).toFile(),
-                    epochFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
-                            .MESSAGE_TIMESTAMP_FILE_NAME).toFile();
-
-            if (Long.parseLong(FileUtils.readFileToString(epochFile, ConfigVars.SERVER_CHARSET)) >
-                    requestedEpochLimit && fileContainsOneOrMoreTags(tagsFile, cleanTags)) {
-                messageIdsThatMatch.add(messageId);
+            final List<String> cleanTags = new LinkedList<>();
+            final StringTokenizer tagsTokenizer = new StringTokenizer(allTags, TAG_SEPARATOR);
+            final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
+            while (tagsTokenizer.hasMoreTokens()) {
+                String cleanTag = tagsTokenizer.nextToken().trim().toLowerCase();
+                if (tagFormatPattern.matcher(cleanTag).matches() && !cleanTags.contains(cleanTag))
+                    cleanTags.add(cleanTag);
             }
-        }
 
-        final JSONObject object = new JSONObject();
-        try {
-            object.put("status", "ok");
-            final JSONArray array = new JSONArray();
-            for (String messageId : messageIdsThatMatch) {
-                final JSONObject thisMsg = new JSONObject();
-                thisMsg.put("msgId", messageId);
+            String[] allMessages = Paths.get(ConfigVars.MESSAGE_CONTAINER).toFile().list();
+
+            final List<String> messageIdsThatMatch = new LinkedList<>();
+            final Long requestedEpochLimit = Long.parseLong(epoch);
+            for (String messageId : allMessages) {
+                if (!Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId).toFile().isDirectory()) {
+                    //This should never happen but, just in case, don't touch
+                    continue;
+                }
+
+                final File tagsFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
+                        .MESSAGE_TAGS_FILE_NAME).toFile(),
+                        epochFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
+                                .MESSAGE_TIMESTAMP_FILE_NAME).toFile();
+
+                if (Long.parseLong(FileUtils.readFileToString(epochFile, ConfigVars.SERVER_CHARSET)) >
+                        requestedEpochLimit && fileContainsOneOrMoreTags(tagsFile, cleanTags)) {
+                    messageIdsThatMatch.add(messageId);
+                }
             }
-            object.put("messages", array);
-            resp.getWriter().print(object.toString());
-            resp.setContentType("application/json");
-            resp.setStatus(HttpServletResponse.SC_OK);
-        } catch (JSONException e) {
-            e.printStackTrace(System.err);
-            //Should never happen
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+            final JSONObject object = new JSONObject();
+            try {
+                object.put("status", "ok");
+                final JSONArray array = new JSONArray();
+                for (String messageId : messageIdsThatMatch) {
+                    final JSONObject thisMsg = new JSONObject();
+                    thisMsg.put("msgId", messageId);
+                }
+                object.put("messages", array);
+                resp.getWriter().print(object.toString());
+                resp.setContentType("application/json");
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } catch (JSONException e) {
+                e.printStackTrace(System.err);
+                //Should never happen
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
         }
     }
 
-    private Boolean fileContainsOneOrMoreTags(File tagsFile, List<String> cleanTags) throws IOException {
+    private synchronized Boolean fileContainsOneOrMoreTags(File tagsFile, List<String> cleanTags) throws IOException {
         List<String> lines = FileUtils.readLines(tagsFile, ConfigVars.SERVER_CHARSET);
         for (String line : lines)
             if (cleanTags.contains(line)) {

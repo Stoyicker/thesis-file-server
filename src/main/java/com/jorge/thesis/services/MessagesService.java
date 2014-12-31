@@ -24,93 +24,98 @@ public final class MessagesService extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        synchronized (this) {
+            final String messageId = req.getParameter("messageid"), bodyType = req.getParameter("type"), fileName,
+                    tagsFileName = ConfigVars.MESSAGE_TAGS_FILE_NAME;
 
-        final String messageId = req.getParameter("messageid"), bodyType = req.getParameter("type"), fileName,
-                tagsFileName = ConfigVars.MESSAGE_TAGS_FILE_NAME;
-
-        if (messageId == null || bodyType == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
-        switch (bodyType.toLowerCase()) {
-            case "normal":
-                fileName = ConfigVars.MESSAGE_BODY_FILE_NAME;
-                break;
-            case "sketchboard":
-                fileName = ConfigVars.MESSAGE_SKETCHBOARD_FILE_NAME;
-                if (Files.exists(Paths.get(fileName))) {
-                    resp.addHeader("Message-Identifier", "string; identifier=" + messageId);
-                    resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    return;
-                }
-                break;
-            default:
+            if (messageId == null || bodyType == null) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
-        }
+            }
 
-        resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
+            switch (bodyType.toLowerCase()) {
+                case "normal":
+                    fileName = ConfigVars.MESSAGE_BODY_FILE_NAME;
+                    break;
+                case "sketchboard":
+                    fileName = ConfigVars.MESSAGE_SKETCHBOARD_FILE_NAME;
+                    if (Files.exists(Paths.get(fileName))) {
+                        resp.addHeader("Message-Identifier", "string; identifier=" + messageId);
+                        resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        return;
+                    }
+                    break;
+                default:
+                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    return;
+            }
 
-        final File bodyFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, fileName).toFile(), tagsFile = Paths
-                .get(ConfigVars.MESSAGE_CONTAINER, messageId, tagsFileName).toFile();
+            resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
 
-        if (!bodyFile.exists()) {
-            resp.addHeader("Message-Identifier", "string; identifier=" + messageId);
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
+            final File bodyFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, fileName).toFile(), tagsFile =
+                    Paths
+                    .get(ConfigVars.MESSAGE_CONTAINER, messageId, tagsFileName).toFile();
 
-        final JSONObject object = new JSONObject();
+            if (!bodyFile.exists()) {
+                resp.addHeader("Message-Identifier", "string; identifier=" + messageId);
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
 
-        try {
-            object.put("status", "ok");
-            if (!tagsFile.exists())
-                object.put("tags", "");
-            else
-                object.put("tags", FileUtils.readFileToString(tagsFile, ConfigVars.SERVER_CHARSET));
-            object.put("content_html", FileUtils.readFileToString(bodyFile));
-            resp.setContentType("application/json");
-            resp.getWriter().print(object.toString());
-            resp.setStatus(HttpServletResponse.SC_OK);
-        } catch (JSONException e) {
-            e.printStackTrace(System.err);
-            //Should never happen
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            final JSONObject object = new JSONObject();
+
+            try {
+                object.put("status", "ok");
+                if (!tagsFile.exists())
+                    object.put("tags", "");
+                else
+                    object.put("tags", FileUtils.readFileToString(tagsFile, ConfigVars.SERVER_CHARSET));
+                object.put("content_html", FileUtils.readFileToString(bodyFile));
+                resp.setContentType("application/json");
+                resp.getWriter().print(object.toString());
+                resp.setStatus(HttpServletResponse.SC_OK);
+            } catch (JSONException e) {
+                e.printStackTrace(System.err);
+                //Should never happen
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
         }
     }
 
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if (resp.getContentType() == null || !resp.getContentType().toLowerCase().contentEquals("application/json")) {
-            resp.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
-            return;
-        }
+        synchronized (this) {
+            if (resp.getContentType() == null || !resp.getContentType().toLowerCase().contentEquals
+                    ("application/json")) {
+                resp.setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
+                return;
+            }
 
-        final JSONObject object = (JSONObject) JSON.parse(req.getReader()); //Data from the body as characters (fine
-        // for JSON)
-        final String content_html;
-        final List<String> tags = new LinkedList<>();
-        try {
-            content_html = object.getString("content_html");
-            JSONArray tagsAsJSONArray = object.getJSONArray("tags");
-            for (Integer i = 0; i < tagsAsJSONArray.length(); i++)
-                tags.add(tagsAsJSONArray.getString(i));
-        } catch (JSONException e) {
-            e.printStackTrace(System.err);
-            //Should never happen
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
-        if (MessageManagerSingleton.getInstance().areMoreMessagesAllowed()) {
-            if (MessageManagerSingleton.getInstance().processMessage(content_html, tags)) {
-                resp.setStatus(HttpServletResponse.SC_OK);
-                //TODO Notify the GCM server so that it asks for the proper tags to be refreshed
-            } else
+            final JSONObject object = (JSONObject) JSON.parse(req.getReader()); //Data from the body as characters (fine
+            // for JSON)
+            final String content_html;
+            final List<String> tags = new LinkedList<>();
+            try {
+                content_html = object.getString("content_html");
+                JSONArray tagsAsJSONArray = object.getJSONArray("tags");
+                for (Integer i = 0; i < tagsAsJSONArray.length(); i++)
+                    tags.add(tagsAsJSONArray.getString(i));
+            } catch (JSONException e) {
+                e.printStackTrace(System.err);
+                //Should never happen
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        } else
-            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
+            if (MessageManagerSingleton.getInstance().areMoreMessagesAllowed()) {
+                if (MessageManagerSingleton.getInstance().processMessage(content_html, tags)) {
+                    resp.setStatus(HttpServletResponse.SC_OK);
+                    //TODO Notify the GCM server so that it asks for the proper tags to be refreshed
+                } else
+                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            } else
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        }
     }
 }

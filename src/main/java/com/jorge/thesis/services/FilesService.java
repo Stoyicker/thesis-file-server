@@ -23,52 +23,55 @@ public final class FilesService extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        synchronized (this) {
+            final String messageId = req.getParameter("messageid"), fileName = req.getParameter("filename");
 
-        final String messageId = req.getParameter("messageid"), fileName = req.getParameter("filename");
+            if (messageId == null || fileName == null) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
 
-        if (messageId == null || fileName == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
+            File file = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, fileName).toFile();
+
+            if (!file.exists()) {
+                resp.addHeader("Message-Identifier", "string; identifier=" + messageId);
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
+
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.getOutputStream().write(FileUtils.readFileToByteArray(file));
+
+            resp.setContentType("application/octet-stream");
         }
-        resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
-
-        File file = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, fileName).toFile();
-
-        if (!file.exists()) {
-            resp.addHeader("Message-Identifier", "string; identifier=" + messageId);
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        resp.setStatus(HttpServletResponse.SC_OK);
-        resp.getOutputStream().write(FileUtils.readFileToByteArray(file));
-
-        resp.setContentType("application/octet-stream");
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        final String messageId = req.getParameter("messageid"), fileName = req.getParameter("filename");
+        synchronized (this) {
+            final String messageId = req.getParameter("messageid"), fileName = req.getParameter("filename");
 
-        final Path messagePath = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId);
+            final Path messagePath = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId);
 
-        if (messageId == null || fileName == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-        resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
+            if (messageId == null || fileName == null) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            resp.addHeader("Content-Disposition", "attachment; filename=" + fileName);
 
-        if (Files.exists(messagePath)) {
-            final Path filePath;
-            if (!Files.exists(filePath = Paths.get(messagePath.toAbsolutePath().toString(), fileName))) {
-                if (uploadFile(filePath, req))
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                else
-                    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            if (Files.exists(messagePath)) {
+                final Path filePath;
+                if (!Files.exists(filePath = Paths.get(messagePath.toAbsolutePath().toString(), fileName))) {
+                    if (uploadFile(filePath, req))
+                        resp.setStatus(HttpServletResponse.SC_OK);
+                    else
+                        resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                } else
+                    resp.setStatus(HttpServletResponse.SC_CONFLICT);
             } else
-                resp.setStatus(HttpServletResponse.SC_CONFLICT);
-        } else
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
     }
 
     private synchronized Boolean uploadFile(Path filePath, HttpServletRequest req) {
