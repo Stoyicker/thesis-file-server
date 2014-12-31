@@ -99,7 +99,7 @@ public class MessageManagerSingleton {
                 FileUtils.writeStringToFile(Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
                                 .MESSAGE_TAGS_FILE_NAME).toAbsolutePath().toFile(), ct + "\n", ConfigVars
                                 .SERVER_CHARSET,
-                        Boolean.FALSE);
+                        Boolean.TRUE);
             }
         } catch (IOException e) {
             e.printStackTrace(System.err);
