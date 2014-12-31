@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public final class MessagesService extends HttpServlet {
 
@@ -54,7 +55,7 @@ public final class MessagesService extends HttpServlet {
 
             final File bodyFile = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, fileName).toFile(), tagsFile =
                     Paths
-                    .get(ConfigVars.MESSAGE_CONTAINER, messageId, tagsFileName).toFile();
+                            .get(ConfigVars.MESSAGE_CONTAINER, messageId, tagsFileName).toFile();
 
             if (!bodyFile.exists()) {
                 resp.addHeader("Message-Identifier", "string; identifier=" + messageId);
@@ -95,12 +96,16 @@ public final class MessagesService extends HttpServlet {
             final JSONObject object = (JSONObject) JSON.parse(req.getReader()); //Data from the body as characters (fine
             // for JSON)
             final String content_html;
-            final List<String> tags = new LinkedList<>();
+            final List<String> cleanTags = new LinkedList<>();
+            final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
             try {
                 content_html = object.getString("content_html");
                 JSONArray tagsAsJSONArray = object.getJSONArray("tags");
-                for (Integer i = 0; i < tagsAsJSONArray.length(); i++)
-                    tags.add(tagsAsJSONArray.getString(i));
+                for (Integer i = 0; i < tagsAsJSONArray.length(); i++) {
+                    final String candidateTag = tagsAsJSONArray.getString(i).trim().toLowerCase();
+                    if (tagFormatPattern.matcher(candidateTag).matches() && !cleanTags.contains(candidateTag))
+                        cleanTags.add(candidateTag);
+                }
             } catch (JSONException e) {
                 e.printStackTrace(System.err);
                 //Should never happen
@@ -109,7 +114,7 @@ public final class MessagesService extends HttpServlet {
             }
 
             if (MessageManagerSingleton.getInstance().areMoreMessagesAllowed()) {
-                if (MessageManagerSingleton.getInstance().processMessage(content_html, tags)) {
+                if (MessageManagerSingleton.getInstance().processMessage(content_html, cleanTags)) {
                     resp.setStatus(HttpServletResponse.SC_OK);
                     //TODO Notify the GCM server so that it asks for the proper tags to be refreshed
                 } else
