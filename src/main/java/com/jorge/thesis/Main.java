@@ -1,5 +1,6 @@
 package com.jorge.thesis;
 
+import com.jorge.thesis.io.files.PurgerSingleton;
 import com.jorge.thesis.services.FilesService;
 import com.jorge.thesis.services.MessagesService;
 import com.jorge.thesis.services.TagService;
@@ -29,7 +30,9 @@ public class Main {
                 throw new IllegalStateException("Message folder not found and could not create it. Startup aborted.");
         }
 
-        //TODO Run purge if requested
+        final PurgerSingleton purger = PurgerSingleton.getInstance();
+        if (purger.parse())
+            purger.runPurge();
 
         Integer webPort;
         try {

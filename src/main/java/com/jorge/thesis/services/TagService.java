@@ -91,7 +91,6 @@ public final class TagService extends HttpServlet {
     private synchronized Boolean fileContainsOneOrMoreTags(File tagsFile, List<String> cleanTags) throws IOException {
         List<String> lines = FileUtils.readLines(tagsFile, ConfigVars.SERVER_CHARSET);
         for (String line : lines) {
-            System.out.println("Line: " + line);
             if (cleanTags.contains(line)) {
                 return Boolean.TRUE;
             }

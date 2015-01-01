@@ -1,6 +1,7 @@
 package com.jorge.thesis.io.files;
 
 import com.jorge.thesis.util.ConfigVars;
+import org.apache.commons.io.FileUtils;
 import org.jdom2.Element;
 import org.jdom2.input.DOMBuilder;
 import org.w3c.dom.Document;
@@ -12,6 +13,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -39,7 +41,7 @@ public class PurgerSingleton {
         return ret;
     }
 
-    public Boolean parse() {
+    public synchronized Boolean parse() {
         final File purgeFile = Paths.get(ConfigVars.PURGE_CONF).toFile();
         org.jdom2.Document jdomDoc;
         try {
@@ -50,7 +52,8 @@ public class PurgerSingleton {
             mRun = Boolean.parseBoolean(run.getText());
             if (!mRun)
                 return Boolean.FALSE;
-            mDeleteEpoch = Long.parseLong(deleteInterval.getText()) * 30 * 86400000; //86400000 millis in one day
+            //86400000 millis in one day
+            mDeleteEpoch = System.currentTimeMillis() - Long.parseLong(deleteInterval.getText()) * 30 * 86400000;
             mForbiddenTags = new LinkedList<>();
             final List<Element> forbiddenTags = keepTags.getChildren("tag");
             final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
@@ -63,7 +66,7 @@ public class PurgerSingleton {
                         System.err.println("Duplicated tag " + cleanTag + " in the purger configuration. Skipping.");
                     }
                 } else {
-                    System.err.println("Malformed tag " + cleanTag + ". Skipping.");
+                    System.err.println("Malformed tag " + cleanTag + " set for purge protection. Skipping.");
                 }
             }
         } catch (Exception e) {
@@ -76,7 +79,7 @@ public class PurgerSingleton {
         return Boolean.TRUE;
     }
 
-    private org.jdom2.Document useDOMParser(File fileName)
+    private synchronized org.jdom2.Document useDOMParser(File fileName)
             throws ParserConfigurationException, SAXException, IOException {
 
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -85,6 +88,57 @@ public class PurgerSingleton {
         Document doc = dBuilder.parse(fileName);
         DOMBuilder domBuilder = new DOMBuilder();
         return domBuilder.build(doc);
+    }
 
+    public synchronized void runPurge() {
+        final File[] fileList = Paths.get(ConfigVars.MESSAGE_CONTAINER).toFile().listFiles();
+
+        if (fileList == null) {
+            System.err.println("Error when referencing the message folder. Skipping purge.");
+            return;
+        }
+
+        for (File x : fileList) {
+            if (!x.isDirectory())
+                if (!x.delete())
+                    System.err.println("Could not delete file " + x.getName() + ". Skipping.");
+                else {
+                    Long thisFileEpoch;
+                    try {
+                        thisFileEpoch = Long.parseLong(FileUtils.readFileToString(Paths.get(ConfigVars
+                                .MESSAGE_CONTAINER, ConfigVars.MESSAGE_TIMESTAMP_FILE_NAME).toFile()));
+                    } catch (Exception e) {
+                        e.printStackTrace(System.err);
+                        System.err.println("Unexpected error when checking for timestamp in directory " + x.getName()
+                                + ". Deleting directory " + x.getName() + " (assuming " +
+                                "malformation)");
+                        if (!FileUtils.deleteQuietly(x))
+                            System.err.println("Could not delete directory " + x.getName() + ". Skipping.");
+                        continue;
+                    }
+                    if (mDeleteEpoch > thisFileEpoch) {
+                        final List<String> rawTags;
+                        try {
+                            rawTags = FileUtils.readLines(Paths.get(ConfigVars.MESSAGE_CONTAINER,
+                                    ConfigVars.MESSAGE_TAGS_FILE_NAME).toFile(), ConfigVars.SERVER_CHARSET);
+                            deleteDirIfTagsAllow(x, rawTags);
+                        } catch (IOException e) {
+                            e.printStackTrace(System.err);
+                            System.err.println("Unexpected error when checking for tags in directory " + x.getName() +
+                                    ". Deleting directory " + x.getName() + " (assuming " +
+                                    "malformation)");
+                            if (!FileUtils.deleteQuietly(x))
+                                System.err.println("Could not delete directory " + x.getName() + ". Skipping.");
+                        }
+                    }
+                }
+        }
+    }
+
+    private void deleteDirIfTagsAllow(File x, List<String> rawTags) {
+        if (Collections.disjoint(mForbiddenTags, rawTags)) {
+            if (!FileUtils.deleteQuietly(x))
+                System.err.println("Could not delete directory " + x.getName() + ". Skipping.");
+        }
     }
 }
