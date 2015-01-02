@@ -65,7 +65,7 @@ public class MessageManagerSingleton {
         return new File(ConfigVars.MESSAGE_CONTAINER).list().length < Integer.MAX_VALUE;
     }
 
-    public synchronized Boolean processMessage(String content_html, List<String> tags) {
+    public synchronized Boolean processMessage(String sender, String content_html, List<String> tags) {
         final String messageId = generateMessageId();
 
         if (!Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId).toFile().mkdirs()) {
@@ -78,6 +78,16 @@ public class MessageManagerSingleton {
         try {
             FileUtils.writeStringToFile(Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
                             .MESSAGE_BODY_FILE_NAME).toAbsolutePath().toFile(), content_html, ConfigVars.SERVER_CHARSET,
+                    Boolean.FALSE);
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            //Should never happen
+            return Boolean.FALSE;
+        }
+
+        try {
+            FileUtils.writeStringToFile(Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId, ConfigVars
+                            .MESSAGE_SENDER_FILE_NAME).toAbsolutePath().toFile(), sender, ConfigVars.SERVER_CHARSET,
                     Boolean.FALSE);
         } catch (IOException e) {
             e.printStackTrace(System.err);

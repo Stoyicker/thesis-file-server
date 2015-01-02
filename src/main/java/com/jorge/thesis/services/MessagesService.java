@@ -54,9 +54,13 @@ public final class MessagesService extends HttpServlet {
                     allAttachments.add(x);
             }
 
+            final String sender = FileUtils.readFileToString(Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId,
+                    ConfigVars.MESSAGE_SENDER_FILE_NAME).toFile());
+
             final JSONObject object = new JSONObject();
 
             try {
+                object.put("sender", sender);
                 object.put("status", "ok");
                 if (!tagsFile.exists())
                     object.put("tags", Collections.<String>emptyList());
@@ -111,7 +115,7 @@ public final class MessagesService extends HttpServlet {
                 return;
             }
 
-            final String content_html;
+            final String content_html, sender;
             final List<String> cleanTags = new LinkedList<>();
             final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
 
@@ -121,6 +125,7 @@ public final class MessagesService extends HttpServlet {
                 // (fine
                 // for JSON)
                 content_html = object.getString("content_html");
+                sender = object.getString("sender");
                 JSONArray tagsAsJSONArray = object.getJSONArray("tags");
                 for (Integer i = 0; i < tagsAsJSONArray.length(); i++) {
                     final String candidateTag = tagsAsJSONArray.getString(i).trim().toLowerCase(Locale.ENGLISH);
@@ -135,7 +140,7 @@ public final class MessagesService extends HttpServlet {
             }
 
             if (MessageManagerSingleton.getInstance().areMoreMessagesAllowed()) {
-                if (MessageManagerSingleton.getInstance().processMessage(content_html, cleanTags)) {
+                if (MessageManagerSingleton.getInstance().processMessage(sender, content_html, cleanTags)) {
                     resp.setStatus(HttpServletResponse.SC_OK);
                     final StringBuilder cleanTagsTogether = new StringBuilder();
                     for (Iterator<String> it = cleanTags.iterator(); it.hasNext(); ) {

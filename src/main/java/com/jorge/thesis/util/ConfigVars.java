@@ -10,7 +10,9 @@ import java.nio.file.Paths;
 public final class ConfigVars {
 
     public static String MESSAGE_BODY_FILE_NAME;
-    public static String PORT, MESSAGE_CONTAINER;
+    public static String MESSAGE_SENDER_FILE_NAME;
+    public static String PORT;
+    public static String MESSAGE_CONTAINER;
     public static String MESSAGE_TAGS_FILE_NAME;
     public static String MESSAGE_SKETCHBOARD_FILE_NAME;
     public static String MESSAGE_TIMESTAMP_FILE_NAME;
@@ -32,6 +34,8 @@ public final class ConfigVars {
                         ("/message_folder_name"));
                 MESSAGE_BODY_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
                         ("/message_body_file_name"));
+                MESSAGE_SENDER_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
+                        ("/message_sender_file_name"));
                 MESSAGE_TAGS_FILE_NAME = IOUtils.toString(ConfigVars.class.getResourceAsStream
                         ("/message_tags_file_name"));
                 SERVER_CHARSET = Charset.forName(IOUtils.toString(ConfigVars.class.getResourceAsStream
