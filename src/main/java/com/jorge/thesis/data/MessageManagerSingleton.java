@@ -65,14 +65,14 @@ public class MessageManagerSingleton {
         return new File(ConfigVars.MESSAGE_CONTAINER).list().length < Integer.MAX_VALUE;
     }
 
-    public synchronized Boolean processMessage(String sender, String content_html, List<String> tags) {
+    public synchronized Integer processMessage(String sender, String content_html, List<String> tags) {
         final String messageId = generateMessageId();
 
         if (!Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId).toFile().mkdirs()) {
             System.err.println("Error when processing message " + messageId + " (folder creation). Aborting message " +
                     "processing.");
             //Should never happen
-            return Boolean.FALSE;
+            return -1;
         }
 
         try {
@@ -82,7 +82,7 @@ public class MessageManagerSingleton {
         } catch (IOException e) {
             e.printStackTrace(System.err);
             //Should never happen
-            return Boolean.FALSE;
+            return -1;
         }
 
         try {
@@ -92,7 +92,7 @@ public class MessageManagerSingleton {
         } catch (IOException e) {
             e.printStackTrace(System.err);
             //Should never happen
-            return Boolean.FALSE;
+            return -1;
         }
 
         //Clean the tags
@@ -114,7 +114,7 @@ public class MessageManagerSingleton {
         } catch (IOException e) {
             e.printStackTrace(System.err);
             //Should never happen
-            return Boolean.FALSE;
+            return -1;
         }
 
         try {
@@ -125,9 +125,9 @@ public class MessageManagerSingleton {
         } catch (IOException e) {
             e.printStackTrace(System.err);
             //Should never happen
-            return Boolean.FALSE;
+            return -1;
         }
 
-        return Boolean.TRUE;
+        return Integer.parseInt(messageId);
     }
 }

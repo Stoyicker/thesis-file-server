@@ -140,8 +140,19 @@ public final class MessagesService extends HttpServlet {
             }
 
             if (MessageManagerSingleton.getInstance().areMoreMessagesAllowed()) {
-                if (MessageManagerSingleton.getInstance().processMessage(sender, content_html, cleanTags)) {
+                final Integer messageId;
+                if ((messageId = MessageManagerSingleton.getInstance().processMessage(sender, content_html,
+                        cleanTags)) != -1) {
                     resp.setStatus(HttpServletResponse.SC_OK);
+                    try {
+                        final JSONObject obj = new JSONObject();
+                        obj.put("status", "ok");
+                        obj.put("msgid", messageId);
+                        resp.getWriter().print(obj.toString());
+                    } catch (JSONException e) {
+                        e.printStackTrace(System.err);
+                        //Should never happen
+                    }
                     final StringBuilder cleanTagsTogether = new StringBuilder();
                     for (Iterator<String> it = cleanTags.iterator(); it.hasNext(); ) {
                         cleanTagsTogether.append(it.next());
