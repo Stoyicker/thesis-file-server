@@ -42,7 +42,7 @@ public class PurgerSingleton {
     }
 
     public synchronized Boolean parse() {
-        final File purgeFile = Paths.get(ConfigVars.PURGE_CONF).toFile();
+        final File purgeFile = Paths.get(ConfigVars.PURGE_CONF_FILE_NAME).toFile();
         org.jdom2.Document jdomDoc;
         try {
             jdomDoc = useDOMParser(purgeFile);
@@ -72,7 +72,7 @@ public class PurgerSingleton {
         } catch (Exception e) {
             e.printStackTrace(System.err);
             //Should never happen
-            System.err.println("Malformed purge configuration file. Skipping purge.");
+            System.err.println("Non-existing or malformed purge configuration file. Skipping purge.");
             return Boolean.FALSE;
         }
 

@@ -17,7 +17,7 @@ public final class ConfigVars {
     public static String MESSAGE_SKETCHBOARD_FILE_NAME;
     public static String MESSAGE_TIMESTAMP_FILE_NAME;
     public static String GCM_SERVER_ADDR;
-    public static String PURGE_CONF;
+    public static String PURGE_CONF_FILE_NAME;
     public static Charset SERVER_CHARSET;
     private static Boolean INITIALIZED = Boolean.FALSE;
 
@@ -48,8 +48,8 @@ public final class ConfigVars {
                         ("/configuration_folder_name"));
                 GCM_SERVER_ADDR = FileUtils.readFileToString(Paths.get(CONFIGURATION_FOLDER_NAME, "addr" +
                         ".conf").toFile());
-                PURGE_CONF = FileUtils.readFileToString(Paths.get(CONFIGURATION_FOLDER_NAME, "purge" +
-                        ".xml").toFile());
+                PURGE_CONF_FILE_NAME = Paths.get(CONFIGURATION_FOLDER_NAME, "purge" +
+                        ".xml").toString();
                 if (GCM_SERVER_ADDR == null)
                     throw new IllegalStateException("GCM_SERVER_ADDR not provided.");
                 INITIALIZED = Boolean.TRUE;
