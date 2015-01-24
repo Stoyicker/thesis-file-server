@@ -21,6 +21,9 @@ import java.util.List;
 public final class FilesService extends HttpServlet {
 
     @Override
+    /**
+     * Downloads an attachment (of a given message).
+     */
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         synchronized (this) {
@@ -48,6 +51,9 @@ public final class FilesService extends HttpServlet {
     }
 
     @Override
+    /**
+     * Uploads an attachment.
+     */
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         synchronized (this) {
             final String messageId = req.getParameter("messageid"), fileName = req.getParameter("filename");

@@ -26,6 +26,9 @@ import java.util.regex.Pattern;
 public final class MessagesService extends HttpServlet {
 
     @Override
+    /**
+     * Gets a message give its id.
+     */
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         synchronized (this) {
@@ -103,6 +106,9 @@ public final class MessagesService extends HttpServlet {
 
 
     @Override
+    /**
+     * Sends a message body.
+     */
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         synchronized (this) {
             final String objContentType = req.getContentType();
