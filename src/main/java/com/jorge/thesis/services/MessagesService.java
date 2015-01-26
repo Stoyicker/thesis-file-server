@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public final class MessagesService extends HttpServlet {
@@ -122,6 +124,7 @@ public final class MessagesService extends HttpServlet {
             }
 
             final String content_html, sender, senderDeviceId;
+            final Boolean willUploadAttachments;
             final List<String> cleanTags = new LinkedList<>();
             final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
 
@@ -133,6 +136,7 @@ public final class MessagesService extends HttpServlet {
                 content_html = object.getString("content_html");
                 sender = object.getString("sender");
                 senderDeviceId = object.getString("device_id");
+                willUploadAttachments = object.getBoolean("wait_for_attachments");
                 JSONArray tagsAsJSONArray = object.getJSONArray("tags");
                 for (Integer i = 0; i < tagsAsJSONArray.length(); i++) {
                     final String candidateTag = tagsAsJSONArray.getString(i).trim().toLowerCase(Locale.ENGLISH);
@@ -168,10 +172,13 @@ public final class MessagesService extends HttpServlet {
                     }
                     final String requestURL = ConfigVars.GCM_SERVER_ADDR.trim() + "/tags" + "?type=sync&tags=" +
                             cleanTagsTogether + "&id=" + senderDeviceId;
-                    final Response gcmResp = HTTPRequestsSingleton.getInstance().performRequest(new Request.Builder()
-                            .url(requestURL).post(RequestBody.create(MediaType.parse("text/plain"), ""))
-                            .build());
-                    System.out.println(gcmResp.toString());
+                    Runnable syncRequestTask = () -> {
+                        final Response gcmResp = HTTPRequestsSingleton.getInstance().performRequest(new Request.Builder()
+                                .url(requestURL).post(RequestBody.create(MediaType.parse("text/plain"), ""))
+                                .build());
+                        System.out.println(gcmResp.toString());
+                    };
+                    Executors.newSingleThreadScheduledExecutor().schedule(syncRequestTask, willUploadAttachments ? ConfigVars.MESSAGE_WITH_ATTACHMENTS_NOTIFICATION_DELAY_MILLIS : 0, TimeUnit.MILLISECONDS);
                 } else
                     resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             } else

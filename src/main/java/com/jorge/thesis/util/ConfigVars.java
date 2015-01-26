@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 
 public final class ConfigVars {
 
+    public static Long MESSAGE_WITH_ATTACHMENTS_NOTIFICATION_DELAY_MILLIS;
     public static String MESSAGE_BODY_FILE_NAME;
     public static String MESSAGE_SENDER_FILE_NAME;
     public static String PORT;
@@ -52,6 +53,8 @@ public final class ConfigVars {
                         ".xml").toString();
                 if (GCM_SERVER_ADDR == null)
                     throw new IllegalStateException("GCM_SERVER_ADDR not provided.");
+                MESSAGE_WITH_ATTACHMENTS_NOTIFICATION_DELAY_MILLIS = Long.parseLong(IOUtils.toString(ConfigVars.class.getResourceAsStream(
+                        "/message_with_attachments_notification_delay_millis")));
                 INITIALIZED = Boolean.TRUE;
             } catch (IOException e) {
                 e.printStackTrace(System.err);
