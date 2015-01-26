@@ -121,7 +121,7 @@ public final class MessagesService extends HttpServlet {
                 return;
             }
 
-            final String content_html, sender;
+            final String content_html, sender, senderDeviceId;
             final List<String> cleanTags = new LinkedList<>();
             final Pattern tagFormatPattern = Pattern.compile("[a-z0-9_]+");
 
@@ -132,6 +132,7 @@ public final class MessagesService extends HttpServlet {
                 // for JSON)
                 content_html = object.getString("content_html");
                 sender = object.getString("sender");
+                senderDeviceId = object.getString("device_id");
                 JSONArray tagsAsJSONArray = object.getJSONArray("tags");
                 for (Integer i = 0; i < tagsAsJSONArray.length(); i++) {
                     final String candidateTag = tagsAsJSONArray.getString(i).trim().toLowerCase(Locale.ENGLISH);
@@ -166,7 +167,7 @@ public final class MessagesService extends HttpServlet {
                             cleanTagsTogether.append(TagService.TAG_SEPARATOR);
                     }
                     final String requestURL = ConfigVars.GCM_SERVER_ADDR.trim() + "/tags" + "?type=sync&tags=" +
-                            cleanTagsTogether;
+                            cleanTagsTogether + "&id=" + senderDeviceId;
                     final Response gcmResp = HTTPRequestsSingleton.getInstance().performRequest(new Request.Builder()
                             .url(requestURL).post(RequestBody.create(MediaType.parse("text/plain"), ""))
                             .build());
