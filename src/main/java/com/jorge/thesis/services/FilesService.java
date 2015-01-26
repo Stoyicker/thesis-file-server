@@ -58,7 +58,7 @@ public final class FilesService extends HttpServlet {
         synchronized (this) {
             final String messageId = req.getParameter("messageid"), fileName = req.getParameter("filename");
 
-            final Path messagePath = Paths.get(ConfigVars.MESSAGE_CONTAINER, messageId);
+            final Path messagePath = Paths.get(".", ConfigVars.MESSAGE_CONTAINER, messageId);
 
             if (messageId == null || fileName == null) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -92,10 +92,8 @@ public final class FilesService extends HttpServlet {
             for (Object item1 : items) {
                 // Get the current item in the iteration
                 FileItem item = (FileItem) item1;
-                if (!item.isFormField()) {
-                    File disk = new File(filePath.toAbsolutePath().toString());
-                    item.write(disk);
-                }
+                File disk = new File(filePath.toAbsolutePath().toString());
+                item.write(disk);
             }
 
             return Boolean.TRUE;
