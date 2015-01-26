@@ -19,8 +19,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -172,19 +170,13 @@ public final class MessagesService extends HttpServlet {
                         if (it.hasNext())
                             cleanTagsTogether.append(TagService.TAG_SEPARATOR);
                     }
-                    final String requestURL = ConfigVars.GCM_SERVER_ADDR.trim() + "/tags" + "?type=sync&tags=" +
-                            cleanTagsTogether + "&id=" + senderDeviceId;
                     Runnable syncRequestTask = () -> {
                         final Response gcmResp;
-                        try {
-                            gcmResp = HTTPRequestsSingleton.getInstance().performRequest(new Request.Builder()
-                                    .url(URLEncoder.encode(requestURL, "UTF-8")).post(RequestBody.create(MediaType.parse("text/plain"), ""))
-                                    .build());
-                            System.out.println(gcmResp.toString());
-                        } catch (UnsupportedEncodingException e) {
-                            //Should never happen
-                            e.printStackTrace(System.err);
-                        }
+                        gcmResp = HTTPRequestsSingleton.getInstance().performRequest(new Request.Builder()
+                                .url(HTTPRequestsSingleton.httpEncodeAndStringify(ConfigVars.GCM_SERVER_ADDR.trim(), "/tags", "type=sync&tags=" +
+                                        cleanTagsTogether + "&id=" + senderDeviceId)).post(RequestBody.create(MediaType.parse("text/plain"), ""))
+                                .build());
+                        System.out.println(gcmResp.toString());
                     };
                     Executors.newSingleThreadScheduledExecutor().schedule(syncRequestTask, willUploadAttachments ? ConfigVars.MESSAGE_WITH_ATTACHMENTS_NOTIFICATION_DELAY_MILLIS : 0, TimeUnit.MILLISECONDS);
                 } else
