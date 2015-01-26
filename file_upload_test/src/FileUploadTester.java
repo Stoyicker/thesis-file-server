@@ -8,12 +8,10 @@ public class FileUploadTester {
     }
 
     private static void codeJavaTest() {
-        String charset = "UTF-8";
         File uploadFile1 = new File("testFile.exe");
-        String requestURL = "http://localhost:61000/files?messageid=1&filename=uploadtest.exe";
 
         try {
-            MultipartUtility multipart = new MultipartUtility(requestURL, charset);
+            MultipartUtility multipart = new MultipartUtility("localhost:61000", "/files", "messageid=1&filename=uploadtest.exe");
 
             multipart.addHeaderField("User-Agent", "COMM_EXP_SYS_ANDROID");
 
