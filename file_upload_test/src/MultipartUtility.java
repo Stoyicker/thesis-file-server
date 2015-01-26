@@ -1,7 +1,7 @@
-import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 
 /**
  * This utility class provides an abstraction layer for sending multipart HTTP
@@ -32,7 +32,7 @@ public class MultipartUtility {
         // creates a unique boundary based on time stamp
         boundary = "===" + System.currentTimeMillis() + "===";
 
-        URL url = new URL(requestURL);
+        URL url = new URL(URLEncoder.encode(requestURL, "UTF-8"));
         httpConn = (HttpURLConnection) url.openConnection();
         httpConn.setUseCaches(false);
         httpConn.setDoOutput(true); // indicates POST method
