@@ -70,12 +70,14 @@ public final class MessagesService extends HttpServlet {
                 if (!tagsFile.exists())
                     object.put("tags", Collections.<String>emptyList());
                 else {
-                    final List<String> nonEmptyTags = new LinkedList<>();
+                    final JSONArray nonEmptyTags = new JSONArray();
+                    final Collection<String> containmentAuxList = new LinkedList<>();
                     final List<String> rawTags = FileUtils.readLines(tagsFile, ConfigVars.SERVER_CHARSET);
                     for (String x : rawTags) {
                         final String cleanX = x.toLowerCase(Locale.ENGLISH).trim();
-                        if (!cleanX.isEmpty() && !cleanX.contentEquals("\n") && !nonEmptyTags.contains(cleanX)) {
-                            nonEmptyTags.add(cleanX);
+                        if (!cleanX.isEmpty() && !cleanX.contentEquals("\n") && !containmentAuxList.contains(cleanX)) {
+                            nonEmptyTags.put(cleanX);
+                            containmentAuxList.add(cleanX);
                         }
                     }
                     object.put("tags", nonEmptyTags);
